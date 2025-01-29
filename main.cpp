@@ -11,8 +11,20 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     return totalSize;
 }
 
+// Function to check if a file exists
+bool fileExists(const std::string& path) {
+    std::ifstream file(path);
+    return file.good();
+}
+
 // Function to download a file from a given URL
 bool downloadFile(const std::string& url, const std::string& outputPath) {
+    // Check if file already exists
+    if (fileExists(outputPath)) {
+        std::cout << "File already exists: " << outputPath << std::endl;
+        return true;
+    }
+
     CURL* curl = curl_easy_init();
     if (!curl) {
         std::cerr << "Failed to initialize CURL." << std::endl;
@@ -42,9 +54,9 @@ bool downloadFile(const std::string& url, const std::string& outputPath) {
 }
 
 int main() {
-    const std::string jarListFile = "jars.txt"; // File containing JAR names
+    const std::string jarListFile = "dep.txt"; // File containing JAR names
     const std::string mavenRepo = "https://repo1.maven.org/maven2/";
-    const std::string outputDir = "downloads/";
+    const std::string outputDir = "lib/";
 
     // Read the list of JAR files
     std::ifstream jarFile(jarListFile);
@@ -60,10 +72,12 @@ int main() {
         std::string url = mavenRepo + jarPath;
         std::string outputFileName = outputDir + jarPath.substr(jarPath.find_last_of("/") + 1);
 
-        std::cout << "Downloading: " << url << std::endl;
+        std::cout << "Processing: " << url << std::endl;
 
         if (downloadFile(url, outputFileName)) {
-            std::cout << "Downloaded: " << outputFileName << std::endl;
+            if (!fileExists(outputFileName)) {
+                std::cout << "Downloaded: " << outputFileName << std::endl;
+            }
         } else {
             std::cerr << "Failed to download: " << url << std::endl;
         }
