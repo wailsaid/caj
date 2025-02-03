@@ -104,16 +104,17 @@ bool buildProject() {
 
     // Create manifest file
     std::ofstream manifest("build/MANIFEST.MF");
-    manifest << "Main-Class: src.Example\n"
+    manifest << "Manifest-Version: 1.0\n"
+             << "Main-Class: src.Example\n"
              << "Class-Path:";
     
-    // Add all JARs to manifest Class-Path
+    // Add all JARs to manifest Class-Path with relative paths
     for (const auto& entry : std::filesystem::directory_iterator("lib")) {
         if (entry.path().extension() == ".jar") {
-            manifest << " lib/" << entry.path().filename().string();
+            manifest << " ../lib/" << entry.path().filename().string();
         }
     }
-    manifest << "\n";
+    manifest << "\n\n";
     manifest.close();
 
     // Create JAR file
