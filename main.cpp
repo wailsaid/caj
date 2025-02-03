@@ -105,20 +105,42 @@ bool buildProject() {
     // Create manifest file
     std::ofstream manifest("build/MANIFEST.MF");
     manifest << "Manifest-Version: 1.0\n"
-             << "Main-Class: src.Example\n"
-             << "Class-Path:";
-    
-    // Add all JARs to manifest Class-Path with relative paths
-    for (const auto& entry : std::filesystem::directory_iterator("lib")) {
-        if (entry.path().extension() == ".jar") {
-            manifest << " ../lib/" << entry.path().filename().string();
-        }
-    }
-    manifest << "\n\n";
+             << "Main-Class: src.Example\n\n";
     manifest.close();
 
-    // Create JAR file
-    std::string jarCommand = "jar cvfm build/program.jar build/MANIFEST.MF -C build src";
+    // First, compile the Java files
+    // ... existing compilation code ...
+
+    // Create a temporary directory for all contents
+    if (std::filesystem::exists("build/temp")) {
+        std::filesystem::remove_all("build/temp");
+    }
+    std::filesystem::create_directory("build/temp");
+
+    // Copy compiled classes
+    std::string copyCmd = 
+    #ifdef _WIN32
+        "xcopy /E /I build\\src build\\temp\\src";
+    #else
+        "cp -r build/src build/temp/";
+    #endif
+    executeCommand(copyCmd);
+
+    // Extract all dependency JARs to temp directory
+    for (const auto& entry : std::filesystem::directory_iterator("lib")) {
+        if (entry.path().extension() == ".jar") {
+            std::string extractCmd = "cd build/temp && jar xf ../../" + entry.path().string();
+            executeCommand(extractCmd);
+        }
+    }
+
+    // Remove any existing META-INF
+    if (std::filesystem::exists("build/temp/META-INF")) {
+        std::filesystem::remove_all("build/temp/META-INF");
+    }
+
+    // Create the final JAR with all contents
+    std::string jarCommand = "cd build/temp && jar cvfm ../program.jar ../MANIFEST.MF .";
     std::cout << "\nCreating JAR file..." << std::endl;
     std::cout << "Command: " << jarCommand << std::endl;
     
@@ -128,8 +150,11 @@ bool buildProject() {
         return false;
     }
 
+    // Clean up temp directory
+    std::filesystem::remove_all("build/temp");
+
     std::cout << "Build successful!" << std::endl;
-    std::cout << "You can run the program with: java -jar build/program.jar" << std::endl;
+    std::cout << "\nYou can run the program with:\n\n\t\t java -jar build/program.jar \n\n" << std::endl;
     return true;
 }
 
@@ -196,3 +221,4 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 }
+
