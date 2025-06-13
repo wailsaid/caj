@@ -31,3 +31,4 @@
 caj
 lib/*.jar
 build/
+.vscode
