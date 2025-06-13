@@ -1,18 +1,19 @@
 # Compiler settings
 CXX = g++
-CXXFLAGS = -Wall -Wextra
+CXXFLAGS = -Wall -Wextra -I.
 LDFLAGS = -lcurl
 
 # Target executable name
 TARGET = caj
 
 # Source files
-SRCS = main.cpp
+SRCS = main.cpp src/utils.cpp src/downloader.cpp src/builder.cpp
+OBJS = $(SRCS:.cpp=.o)
 
 # Build rule
-$(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS) $(LDFLAGS)
+$(TARGET): $(OBJS)
+	$(CXX) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 # Clean rule
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJS)
